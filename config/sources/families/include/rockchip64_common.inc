@@ -254,13 +254,17 @@ family_tweaks()
 
 		# rename USB based network to lan0
 		mkdir -p $SDCARD/etc/udev/rules.d/
-		echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8152", KERNEL=="eth1", NAME="lan0"' > $SDCARD/etc/udev/rules.d/70-rename-lan.rules
+		echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8152", KERNEL=="eth1", NAME="lan0"', RUN+="/usr/sbin/ethtool -K lan0 tx off" > $SDCARD/etc/udev/rules.d/70-rename-lan.rules
 
 		# workaround - create old school initial network config since network manager have issues
 		echo "auto eth0" >> $SDCARD/etc/network/interfaces
 		echo "	iface eth0 inet dhcp" >> $SDCARD/etc/network/interfaces
 		echo "auto lan0" >> $SDCARD/etc/network/interfaces
 		echo "	iface lan0 inet dhcp" >> $SDCARD/etc/network/interfaces
+
+	elif [[ $BOARD == helios64 ]]; then
+
+		chroot $SDCARD /bin/bash -c "systemctl --no-reload enable helios64-heartbeat-led.service >/dev/null 2>&1"
 
 	elif [[ -f $SDCARD/lib/systemd/system/rk3399-bluetooth.service ]]; then
 
@@ -306,6 +310,17 @@ family_tweaks_bsp()
 		cp $SRC/packages/bsp/helios64/70-keep-usb-lan-as-eth1.rules $destination/etc/udev/rules.d/
 		cp $SRC/packages/bsp/helios64/asound.conf $destination/etc/
 		install -m 755 $SRC/packages/bsp/helios64/disable_auto_poweron $destination/lib/systemd/system-shutdown/
+
+		### Fancontrol tweaks
+		# copy hwmon rules to fix device mapping
+		install -m 644 $SRC/packages/bsp/helios64/90-helios64-hwmon.rules $destination/etc/udev/rules.d/
+
+		# copy fancontrol config
+		install -m 644 $SRC/packages/bsp/helios64/fancontrol.conf $destination/etc/fancontrol
+
+		# LED tweak
+		cp $SRC/packages/bsp/helios64/helios64-heartbeat-led.service $destination/etc/systemd/system/
+
 	fi
 
 	# Graphics and media
