@@ -18,6 +18,9 @@
 # and script configuration
 . /usr/lib/armbian/armbian-common
 
+# set audio
+. /usr/lib/armbian/armbian-audio-config
+
 set_io_scheduler() {
 
 	# Convert kernel version to integer
@@ -221,7 +224,9 @@ prepare_board() {
 			fi
 			case ${BOARD_NAME} in
 				"Helios64")
-					echo 10 >/proc/irq/$(awk -F":" "/xhci/ {print \$1}" </proc/interrupts | sed 's/\ //g')/smp_affinity
+					for i in $(awk -F":" "/xhci/ {print \$1}" </proc/interrupts | sed 's/\ //g'); do
+						echo 10 >/proc/irq/$i/smp_affinity
+					done
 					for i in $(awk -F":" "/ahci/ {print \$1}" </proc/interrupts | sed 's/\ //g'); do
 						echo 30 >/proc/irq/$i/smp_affinity
 					done
