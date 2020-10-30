@@ -200,13 +200,12 @@ improved_git()
 	local delay=10
 	local count=1
 	while [ $count -lt $retries ]; do
-		$realgit $*
-		if [ $? -eq 0 ]; then
+		$realgit "$@"
+		if [[ $? -eq 0 || -f .git/index.lock ]]; then
 			retries=0
 			break
 		fi
-	let count=$count+1
-	display_alert "Git not responding. Retrying in ${delay} seconds."
+	let count=$count+1	
 	sleep $delay
 	done
 
