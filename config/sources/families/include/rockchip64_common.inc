@@ -38,7 +38,7 @@ elif [[ $BOARD == rock64 ]]; then
 	BOOT_USE_MAINLINE_ATF=yes
 	BOOT_SOC=rk3328
 
-elif [[ $BOOTCONFIG == *3328* ]]; then
+elif [[ $BOOTCONFIG == *3328* || $BOARD == station-m1 ]]; then
 
 	BOOT_RK3328_USE_AYUFAN_ATF=yes
 
@@ -74,7 +74,7 @@ case $BRANCH in
 	current)
 
 		KERNELPATCHDIR='rockchip64-'$BRANCH
-		KERNELBRANCH="branch:linux-5.8.y"
+		KERNELBRANCH="branch:linux-5.9.y"
 		LINUXFAMILY=rockchip64
 		LINUXCONFIG='linux-rockchip64-'$BRANCH
 
