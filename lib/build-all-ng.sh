@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) Authors: http://www.armbian.com/authors
+# Copyright (c) Authors: https://www.armbian.com/authors
 #
 # This file is licensed under the terms of the GNU General Public
 # License version 2. This program is licensed "as is" without any
@@ -109,7 +109,7 @@ pack_upload ()
 	if [[ $COMPRESS_OUTPUTIMAGE == *gpg* ]]; then
 		if [[ -n $GPG_PASS ]]; then
 			display_alert "GPG signing" "${version}.img" "info"
-			echo "${GPG_PASS}" | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes "${version}.img${compression_type}" || exit 1
+			echo "${GPG_PASS}" | sudo gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes "${version}.img${compression_type}" || exit 1
 		else
 			display_alert "GPG signing skipped - no GPG_PASS" "${version}.img" "wrn"
 		fi
