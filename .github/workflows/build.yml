@@ -1,4 +1,4 @@
-name: Build
+name: Build beta & edge
 
 on:
   schedule:
@@ -62,6 +62,19 @@ jobs:
         - name: Fix permissions
           run: |
 
+            # make sure no temporally dirs are mounted from previous runs
+            while :
+            do
+                sudo pkill compile.sh || true
+                sudo pkill arm-binfmt-P || true
+                sudo pkill aarch64-binfmt-P || true
+                sudo pkill pixz || true
+                [[ "$(df | grep "/.tmp" | wc -l)" -eq 0 ]] && sudo rm -rf build/.tmp && break
+                echo "Mounted temp directories. Trying to unmount."
+                df | grep ".tmp" | awk '{print $6}' | xargs sudo umount 2>/dev/null || true
+                sleep 10
+            done
+
             sudo chown -R $USER:$USER .
 
         - name: Checkout Armbian build script
@@ -108,7 +121,7 @@ jobs:
             gpg-private-key: ${{ secrets.GPG_KEY1 }}
             passphrase: ${{ secrets.GPG_PASSPHRASE1 }}
 
-        - name: Sign commit and push changes
+        - name: Cleanup and sign rootfs cache
 
           if: ${{ success() }}
           env:
@@ -118,6 +131,13 @@ jobs:
             sudo apt-get -y -qq install parallel
             cd build/cache/rootfs
             sudo chown -R $USER:$USER .
+            # cleanup
+            for line in $(ls | cut -d. -f1-4 | sort -u); do
+                if [[ ! -f $line ]]; then
+                    [[ -n "$line" ]] && rm -f "$line"*
+                fi
+            done
+            # sign
             (for file in $(ls | cut -d. -f1-4 | sort -u); do
                 if [ $(ls $file* | wc -l) -lt 3 ]; then
                    echo "$file"
@@ -149,6 +169,7 @@ jobs:
       steps:
 
         - name: Fix permissions
+
           run: |
 
             sudo chown -R $USER:$USER .
@@ -225,6 +246,19 @@ jobs:
 
           run: |
 
+            # make sure no temporally dirs are mounted from previous runs
+            while :
+            do
+                sudo pkill compile.sh || true
+                sudo pkill arm-binfmt-P || true
+                sudo pkill aarch64-binfmt-P || true
+                sudo pkill pixz || true
+                [[ "$(df | grep "/.tmp" | wc -l)" -eq 0 ]] && sudo rm -rf build/.tmp && break
+                echo "Mounted temp directories. Trying to unmount."
+                df | grep ".tmp" | awk '{print $6}' | xargs sudo umount 2>/dev/null || true
+                sleep 10
+            done
+
             sudo chown -R $USER:$USER .
 
         - name: Checkout Armbian build script
@@ -300,6 +334,16 @@ jobs:
               sudo touch .tmp/bump
             fi
 
+        - name: Import GPG key
+
+          uses: crazy-max/ghaction-import-gpg@v3
+          with:
+            gpg-private-key: ${{ secrets.GPG_KEY2 }}
+            passphrase: ${{ secrets.GPG_PASSPHRASE2 }}
+            workdir: build
+            git-user-signingkey: true
+            git-commit-gpgsign: true
+
         - name: Bump version
 
           if: ${{ success() }}
@@ -368,6 +412,19 @@ jobs:
         - name: Fix permissions
 
           run: |
+
+            # make sure no temporally dirs are mounted from previous runs
+            while :
+            do
+                sudo pkill compile.sh || true
+                sudo pkill arm-binfmt-P || true
+                sudo pkill aarch64-binfmt-P || true
+                sudo pkill pixz || true
+                [[ "$(df | grep "/.tmp" | wc -l)" -eq 0 ]] && sudo rm -rf build/.tmp && break
+                echo "Mounted temp directories. Trying to unmount."
+                df | grep ".tmp" | awk '{print $6}' | xargs sudo umount 2>/dev/null || true
+                sleep 10
+            done
 
             sudo chown -R $USER:$USER .
 

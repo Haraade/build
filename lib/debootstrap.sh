@@ -1,18 +1,24 @@
-# Copyright (c) 2015 Igor Pecovnik, igor.pecovnik@gma**.com
+#!/bin/bash
+#
+# Copyright (c) 2013-2021 Igor Pecovnik, igor.pecovnik@gma**.com
 #
 # This file is licensed under the terms of the GNU General Public
 # License version 2. This program is licensed "as is" without any
 # warranty of any kind, whether express or implied.
-
+#
 # This file is a part of the Armbian build script
 # https://github.com/armbian/build/
 
 # Functions:
+
 # debootstrap_ng
 # create_rootfs_cache
 # prepare_partitions
 # update_initramfs
 # create_image
+
+
+
 
 # debootstrap_ng
 #
@@ -61,6 +67,10 @@ debootstrap_ng()
 	# stage: user customization script
 	# NOTE: installing too many packages may fill tmpfs mount
 	customize_image
+
+	# remove packages that are no longer needed. Since we have intrudoced uninstall feature, we might want to clean things that are no longer needed
+	display_alert "No longer needed packages" "purge" "info"
+	chroot $SDCARD /bin/bash -c "apt-get autoremove -y"  >/dev/null 2>&1
 
 	# create list of installed packages for debug purposes
 	chroot $SDCARD /bin/bash -c "dpkg --get-selections" | grep -v deinstall | awk '{print $1}' | cut -f1 -d':' > $DEST/debug/installed-packages-${RELEASE}$([[ ${BUILD_MINIMAL} == yes ]] && echo "-minimal")$([[ ${BUILD_DESKTOP} == yes  ]] && echo "-desktop").list 2>&1
@@ -356,8 +366,9 @@ create_rootfs_cache()
 			--exclude='./sys/*' . | pv -p -b -r -s $(du -sb $SDCARD/ | cut -f1) -N "$display_name" | lz4 -5 -c > $cache_fname
 
 		# sign rootfs cache archive that it can be used for web cache once. Internal purposes
-		if [[ -n $GPG_PASS ]]; then
-			echo $GPG_PASS | sudo gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes $cache_fname
+		if [[ -n "${GPG_PASS}" && "${SUDO_USER}" ]]; then
+			[[ -n ${SUDO_USER} ]] && sudo chown -R ${SUDO_USER}:${SUDO_USER} "${DEST}"/images/
+			echo "${GPG_PASS}" | sudo -H -u ${SUDO_USER} bash -c "gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes ${cache_fname}" || exit 1
 		fi
 
 		# needed for backend to keep current only
@@ -661,7 +672,14 @@ prepare_partitions()
 update_initramfs()
 {
 	local chroot_target=$1
-	update_initramfs_cmd="update-initramfs -uv -k ${VER}-${LINUXFAMILY}"
+	local target_dir=$(
+		find ${chroot_target}/lib/modules/ -maxdepth 1 -type d -name "*${VER}*"
+	)
+	if [ "$target_dir" != "" ]; then
+		update_initramfs_cmd="update-initramfs -uv -k $(basename $target_dir)"
+	else
+		exit_with_error "No kernel installed for the version" "${VER}"
+	fi
 	display_alert "Updating initramfs..." "$update_initramfs_cmd" ""
 	cp /usr/bin/$QEMU_BINARY $chroot_target/usr/bin/
 	mount_chroot "$chroot_target/"
@@ -772,8 +790,18 @@ create_image()
 		if [[ $COMPRESS_OUTPUTIMAGE == *xz* ]]; then
 			display_alert "Compressing" "${FINALDEST}/${version}.img.xz" "info"
 			# compressing consumes a lot of memory we don't have. Waiting for previous packing job to finish helps to run a lot more builds in parallel
-			[[ ${BUILD_ALL} == yes && $(free | grep Mem | awk '{print $4/$2 * 100.0}' | awk '{print int($1)}') -lt 5 ]] && while [[ $(ps -uax | grep "pixz" | wc -l) -gt 4 ]]; do echo -en "#"; sleep 20; done
-			pixz -8 -p 12 < $DESTIMG/${version}.img > ${FINALDEST}/${version}.img.xz
+			available_cpu=$(grep -c 'processor' /proc/cpuinfo)
+			[[ ${BUILD_ALL} == yes ]] && available_cpu=$(( $available_cpu * 30 / 100 )) # lets use 20% of resources in case of build-all
+			[[ ${available_cpu} -gt 8 ]] && available_cpu=8 # using more cpu cores for compressing is pointless
+			available_mem=$(LC_ALL=c free | grep Mem | awk '{print $4/$2 * 100.0}' | awk '{print int($1)}') # in percentage
+			# build optimisations when memory drops below 5%
+			if [[ ${BUILD_ALL} == yes && ( ${available_mem} -lt 15 || $(ps -uax | grep "pixz" | wc -l) -gt 4 )]]; then
+				while [[ $(ps -uax | grep "pixz" | wc -l) -gt 2 ]]
+					do echo -en "#"
+					sleep 20
+				done
+			fi
+			pixz -7 -p ${available_cpu} -f $(expr ${available_cpu} + 2) < $DESTIMG/${version}.img > ${FINALDEST}/${version}.img.xz
 			compression_type=".xz"
 		fi
 
@@ -792,7 +820,8 @@ create_image()
 			cd ${FINALDEST}
 			if [[ -n $GPG_PASS ]]; then
 				display_alert "GPG signing" "${version}.img${compression_type}" "info"
-				echo $GPG_PASS | gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes ${FINALDEST}/${version}.img${compression_type} || exit 1
+				[[ -n ${SUDO_USER} ]] && sudo chown -R ${SUDO_USER}:${SUDO_USER} "${FINALDEST}"/
+				echo "${GPG_PASS}" | sudo -H -u ${SUDO_USER} bash -c "gpg --passphrase-fd 0 --armor --detach-sign --pinentry-mode loopback --batch --yes ${FINALDEST}/${version}.img${compression_type}" || exit 1
 			else
 				display_alert "GPG signing skipped - no GPG_PASS" "${version}.img" "wrn"
 			fi
