@@ -305,7 +305,8 @@ install_common()
 	# install armbian-desktop
 	if [[ "${REPOSITORY_INSTALL}" != *armbian-desktop* ]]; then
 		if [[ $BUILD_DESKTOP == yes ]]; then
-			install_deb_chroot "${DEB_STORAGE}/$RELEASE/${CHOSEN_DESKTOP}_${REVISION}_all.deb"
+			install_deb_chroot "${DEB_STORAGE}/${RELEASE}/${CHOSEN_DESKTOP}_${REVISION}_all.deb"
+			install_deb_chroot "${DEB_STORAGE}/${RELEASE}/${BSP_DESKTOP_PACKAGE_FULLNAME}.deb"
 			# install display manager and PACKAGE_LIST_DESKTOP_FULL packages if enabled per board
 			desktop_postinstall
 		fi
@@ -606,7 +607,7 @@ install_distribution_specific()
 			sed '/security/ d' -i "${SDCARD}"/etc/apt/sources.list
 
 		;;
-	bionic|groovy|focal|hirsute)
+	bionic|focal|hirsute|impish)
 
 			# by using default lz4 initrd compression leads to corruption, go back to proven method
 			sed -i "s/^COMPRESS=.*/COMPRESS=gzip/" "${SDCARD}"/etc/initramfs-tools/initramfs.conf

@@ -151,26 +151,6 @@ fi
 
 
 
-
-if [ "$OFFLINE_WORK" == "yes" ]; then
-
-	echo -e "\n"
-	display_alert "* " "You are working offline."
-	display_alert "* " "Sources, time and host will not be checked"
-	echo -e "\n"
-	sleep 3s
-
-else
-
-	# we need dialog to display the menu in case not installed. Other stuff gets installed later
-	prepare_host_basic
-
-fi
-
-
-
-
-
 # if KERNEL_ONLY, KERNEL_CONFIGURE, BOARD, BRANCH or RELEASE are not set, display selection menu
 if [[ -z $KERNEL_ONLY ]]; then
 
@@ -390,9 +370,6 @@ elif [[ $BUILD_MINIMAL == "yes" ]]; then
 	SELECTED_CONFIGURATION="cli_minimal"
 fi
 
-[[ $BUILD_MINIMAL == yes ]] && EXTERNAL=no
-
-
 [[ ${KERNEL_CONFIGURE} == prebuilt ]] && [[ -z ${REPOSITORY_INSTALL} ]] && \
 REPOSITORY_INSTALL="u-boot,kernel,bsp,armbian-zsh,armbian-config,armbian-firmware${BUILD_DESKTOP:+,armbian-desktop}"
 
@@ -430,6 +407,8 @@ LINUXSOURCEDIR="${KERNELDIR}/$(branch2dir "${KERNELBRANCH}")"
 
 BSP_CLI_PACKAGE_NAME="armbian-bsp-cli-${BOARD}"
 BSP_CLI_PACKAGE_FULLNAME="${BSP_CLI_PACKAGE_NAME}_${REVISION}_${ARCH}"
+BSP_DESKTOP_PACKAGE_NAME="armbian-bsp-desktop-${BOARD}"
+BSP_DESKTOP_PACKAGE_FULLNAME="${BSP_DESKTOP_PACKAGE_NAME}_${REVISION}_${ARCH}"
 
 CHOSEN_UBOOT=linux-u-boot-${BOARD}-${BRANCH}
 CHOSEN_KERNEL=linux-image-${BRANCH}-${LINUXFAMILY}
@@ -536,7 +515,7 @@ overlayfs_wrapper "cleanup"
 
 # create desktop package
 [[ -n $RELEASE && $DESKTOP_ENVIRONMENT && ! -f ${DEB_STORAGE}/$RELEASE/${CHOSEN_DESKTOP}_${REVISION}_all.deb ]] && create_desktop_package
-
+[[ -n $RELEASE && $DESKTOP_ENVIRONMENT && ! -f ${DEB_STORAGE}/${RELEASE}/${BSP_DESKTOP_PACKAGE_FULLNAME}.deb ]] && create_bsp_desktop_package
 
 
 
