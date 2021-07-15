@@ -15,9 +15,10 @@ if [[ $BOARD == lafrite ]]; then
 		UBOOT_TARGET_MAP="u-boot-dtb.img;;u-boot.bin:u-boot.bin u-boot-dtb.img"
 fi
 
-CPUMIN=500000
-CPUMAX=1536000
-GOVERNOR=ondemand
+# Set CPUMIN et al if not already set in the board config.
+CPUMIN=${CPUMIN:-500000}
+CPUMAX=${CPUMAX:-1536000}
+GOVERNOR=${GOVERNOR:-ondemand}
 
 case $BRANCH in
 	
@@ -216,25 +217,31 @@ family_tweaks_bsp()
 	install -m 755 $SRC/packages/bsp/rockchip/hdmi-hotplug $destination/usr/local/bin
 
 	mkdir -p "$destination"/etc/X11/xorg.conf.d
-	if [[ $BOARD == odroidc2 || $BOARD == nanopik2 || $BOARD == lepotato || $BOARD == lafrite || $BOARD == vim1 ]]; then 
-
+	case "${BOARD}" in
+		"odroidc2" | "nanopik2-s905" | "lepotato" | "lafrite" | "khadas-vim1" | "khadas-vim2" )
 	cat <<-EOF > "$destination"/etc/X11/xorg.conf.d/02-driver.conf
-	# set fbdev as default driver.
-	Section "Device"
-	    Identifier "NOGPU"
-	    Driver "fbdev"
-	    EndSection
+	Section "OutputClass"
+	    Identifier "Amlogic"
+	    MatchDriver "meson"
+	    Driver "modesetting"
+	    Option "PrimaryGPU" "true"
+	EndSection
+	Section "Screen"
+	    Identifier      "Default Screen"
+	    Device          "Meson"
+	    Monitor         "foo"
+	    DefaultDepth  24
+	    SubSection "Display"
+	       Depth    24
+	       Modes    "1920x1080" "1440x900" "1280x720" "1280x1024" "1280x960" "1024x768" "800x600" "640x480" "720x400"
+	    EndSubSection
+	EndSection
 	EOF
-
-	elif [[ $BOARD == odroidn2 || $BOARD == odroidc4 || $BOARD == vim2 ]]; then
-
+        ;;
+		"odroidn2" | "odroidc4" | "khadas-vim2" | "odroidhc4" | "khadas-vim3" | "khadas-vim3l" )
 	cat <<-EOF > "$destination"/etc/X11/xorg.conf
 	Section "Device"
-	    Identifier  "Armsoc Graphics"
-	    
-	    ## Use armsoc driver
-	    #   Driver          "armsoc"
-	    ## End armsoc configuration
+	    Identifier  "DRM Graphics Acclerated"
 	    
 	    ## Use modesetting and glamor
 	        Driver      "modesetting"
@@ -253,6 +260,6 @@ family_tweaks_bsp()
 	            EndSubSection
 	        EndSection
 	EOF
-
-	fi
+        ;;
+        esac
 }
