@@ -44,7 +44,7 @@ jobs:
         run: |
 
           # make sure to cut what is after trunk in case we start from nightly
-          sudo docker pull ghcr.io/armbian/build:$(cat build/VERSION | sed 's/trunk.*/trunk/')
+          sudo docker pull ghcr.io/armbian/build:$(cat build/VERSION | sed 's/trunk.*/trunk/')"-$(dpkg --print-architecture)"
 
       - name: Determine changed kernels
         run: |
@@ -133,7 +133,7 @@ jobs:
         if: ${{ matrix.node != 'none:none:none' }}
         run: |
 
-          sudo docker pull ghcr.io/armbian/build:$(cat build/VERSION | sed 's/trunk.*/trunk/')
+          sudo docker pull ghcr.io/armbian/build:$(cat build/VERSION | sed 's/trunk.*/trunk/')"-$(dpkg --print-architecture)"
 
       - name: Build
         if: ${{ matrix.node != 'none:none:none' }}
@@ -144,6 +144,7 @@ jobs:
               BOARD=$(echo $CHUNK | cut -d":" -f1)
               BRANCH=$(echo $CHUNK | cut -d":" -f2)
               FAMILY=$(echo $CHUNK | cut -d":" -f2)
+              echo "FILE_NAME=${FAMILY}-${BRANCH}" >> $GITHUB_ENV
 
               cd build
               [[ ! -f .ignore_changes ]] && sudo touch .ignore_changes
@@ -157,7 +158,7 @@ jobs:
         if: ${{ matrix.node != 'none:none:none' }}
         uses: actions/upload-artifact@v2
         with:
-          name: ${FAMILY}-${BRANCH}
+          name: ${{ env.FILE_NAME }}
           path: build/output/debs-beta/linux-*
           if-no-files-found: ignore
           retention-days: 30
