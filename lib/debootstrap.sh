@@ -35,6 +35,12 @@ debootstrap_ng()
 	rm -rf $SDCARD $MOUNT
 	mkdir -p $SDCARD $MOUNT $DEST/images $SRC/cache/rootfs
 
+	# bind mount rootfs if defined
+	if [[ -d "${ARMBIAN_CACHE_ROOTFS_PATH}" ]]; then
+		mountpoint -q "${SRC}"/cache/rootfs && umount -l "${SRC}"/cache/toolchain
+		mount --bind "${ARMBIAN_CACHE_ROOTFS_PATH}" "${SRC}"/cache/rootfs
+	fi
+
 	# stage: verify tmpfs configuration and mount
 	# CLI needs ~1.5GiB, desktop - ~3.5GiB
 	# calculate and set tmpfs mount to use 9/10 of available RAM+SWAP
@@ -909,8 +915,9 @@ POST_UMOUNT_FINAL_IMAGE
 	mv ${SDCARD}.raw $DESTIMG/${version}.img
 
 	FINALDEST=$DEST/images
+	[[ "${BUILD_ALL}" == yes ]] && MAKE_FOLDERS="yes"
 
-	if [[ $BUILD_ALL == yes ]]; then
+	if [[ "${MAKE_FOLDERS}" == yes ]]; then
 		if [[ "$RC" == yes ]]; then
 			FINALDEST=$DEST/images/"${BOARD}"/RC
 		elif [[ "$BETA" == yes ]]; then
