@@ -172,7 +172,6 @@ install_common()
 
 	# create extlinux config file
 	if [[ $SRC_EXTLINUX == yes ]]; then
-
 		mkdir -p $SDCARD/boot/extlinux
 		cat <<-EOF > "$SDCARD/boot/extlinux/extlinux.conf"
 		LABEL ${VENDOR}
@@ -180,7 +179,9 @@ install_common()
 		  INITRD /boot/$NAME_INITRD
 	EOF
 		if [[ -n $BOOT_FDT_FILE ]]; then
-			echo "  FDT /boot/dtb/$BOOT_FDT_FILE" >> "$SDCARD/boot/extlinux/extlinux.conf"
+			if [[ $BOOT_FDT_FILE != "none" ]]; then
+				echo "  FDT /boot/dtb/$BOOT_FDT_FILE" >> "$SDCARD/boot/extlinux/extlinux.conf"
+			fi
 		else
 			echo "  FDTDIR /boot/dtb/" >> "$SDCARD/boot/extlinux/extlinux.conf"
 		fi
@@ -245,6 +246,9 @@ install_common()
 	# Prepare and export caching-related params common to all apt calls below, to maximize apt-cacher-ng usage
 	export APT_EXTRA_DIST_PARAMS=""
 	[[ $NO_APT_CACHER != yes ]] && APT_EXTRA_DIST_PARAMS="-o Acquire::http::Proxy=\"http://${APT_PROXY_ADDR:-localhost:3142}\" -o Acquire::http::Proxy::localhost=\"DIRECT\""
+
+	display_alert "Cleaning" "package lists"
+	chroot "${SDCARD}" /bin/bash -c "apt-get clean"
 
 	display_alert "Updating" "package lists"
 	chroot "${SDCARD}" /bin/bash -c "apt-get ${APT_EXTRA_DIST_PARAMS} update" >> "${DEST}"/${LOG_SUBPATH}/install.log 2>&1
@@ -701,6 +705,12 @@ install_distribution_specific()
 
 	esac
 
+	# use list modules INITRAMFS
+	if [ -f "${SRC}"/config/modules/"${MODULES_INITRD}" ]; then
+		display_alert "Use file list modules INITRAMFS" "${MODULES_INITRD}"
+		sed -i "s/^MODULES=.*/MODULES=list/" "${SDCARD}"/etc/initramfs-tools/initramfs.conf
+		cat "${SRC}"/config/modules/"${MODULES_INITRD}" >> "${SDCARD}"/etc/initramfs-tools/modules
+	fi
 }
 
 
