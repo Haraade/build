@@ -105,4 +105,3 @@ setup_write_uboot_platform()
 		done
 	fi
 }
-

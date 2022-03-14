@@ -47,17 +47,11 @@ fi
 
 # image artefact destination with or without subfolder
 FINALDEST=$DEST/images
-if [[ "${MAKE_FOLDERS}" == yes ]]; then
+if [[ -n "${MAKE_FOLDERS}" ]]; then
 
-	if [[ "$RC" == yes ]]; then
-		FINALDEST=$DEST/images/"${BOARD}"/rc
-	elif [[ "$BETA" == yes ]]; then
-		FINALDEST=$DEST/images/"${BOARD}"/nightly
-	else
-		FINALDEST=$DEST/images/"${BOARD}"/archive
-	fi
-
+	FINALDEST=$DEST/images/"${BOARD}"/"${MAKE_FOLDERS}"
 	install -d ${FINALDEST}
+
 fi
 
 
@@ -90,7 +84,7 @@ case $REGIONAL_MIRROR in
 	china)
 		[[ -z $USE_MAINLINE_GOOGLE_MIRROR ]] && [[ -z $MAINLINE_MIRROR ]] && MAINLINE_MIRROR=tuna
 		[[ -z $USE_GITHUB_UBOOT_MIRROR ]] && [[ -z $UBOOT_MIRROR ]] && UBOOT_MIRROR=gitee
-		[[ -z $GITHUB_MIRROR ]] && GITHUB_MIRROR=cnpmjs
+		[[ -z $GITHUB_MIRROR ]] && GITHUB_MIRROR=gitclone
 		[[ -z $DOWNLOAD_MIRROR ]] && DOWNLOAD_MIRROR=china
 		;;
 	*)
@@ -139,13 +133,13 @@ MAINLINE_UBOOT_DIR='u-boot'
 
 case $GITHUB_MIRROR in
 	fastgit)
-		GITHUB_SOURCE='https://hub.fastgit.xyz/'
+		GITHUB_SOURCE='https://hub.fastgit.xyz'
 		;;
 	gitclone)
-		GITHUB_SOURCE='https://gitclone.com/github.com/'
+		GITHUB_SOURCE='https://gitclone.com/github.com'
 		;;
 	*)
-		GITHUB_SOURCE='https://github.com/'
+		GITHUB_SOURCE='https://github.com'
 		;;
 esac
 
