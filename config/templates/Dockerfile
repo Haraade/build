@@ -82,6 +82,7 @@ RUN apt-get update \
        openssh-client \
        p7zip-full \
        parted \
+       parallel \
        patchutils \
        pigz \
        pixz \
@@ -100,7 +101,6 @@ RUN apt-get update \
        rsync \
        swig \
        sudo \
-       systemd-container \
        tzdata \
        u-boot-tools \
        udev \
