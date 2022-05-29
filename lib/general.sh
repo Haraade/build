@@ -484,9 +484,6 @@ fetch_from_repo()
 		local workdir=$dir
 	fi
 
-	# Declare folders we use as safe
-	git config --global --add safe.directory "${SRC}/cache/sources/$workdir"
-
 	mkdir -p "${SRC}/cache/sources/${workdir}" 2>/dev/null || \
 		exit_with_error "No path or no write permission" "${SRC}/cache/sources/${workdir}"
 
@@ -663,7 +660,7 @@ fingerprint_image()
 	Title:			${VENDOR} $REVISION ${BOARD^} $BRANCH
 	Kernel:			Linux $VER
 	Build date:		$(date +'%d.%m.%Y')
-	Builder rev:	$(git rev-parse HEAD)
+	Builder rev:		$BUILD_REPOSITORY_COMMIT
 	Maintainer:		$MAINTAINER <$MAINTAINERMAIL>
 	Authors:		https://www.armbian.com/authors
 	Sources: 		https://github.com/armbian/
@@ -1382,7 +1379,7 @@ prepare_host()
 	build-essential  ca-certificates ccache cpio cryptsetup curl              \
 	debian-archive-keyring debian-keyring debootstrap device-tree-compiler    \
 	dialog dirmngr dosfstools dwarves f2fs-tools fakeroot flex gawk           \
-	gcc-arm-linux-gnueabi gcc-aarch64-linux-gnu gdisk gpg                     \
+	gcc-arm-linux-gnueabi gcc-aarch64-linux-gnu gdisk gpg busybox             \
 	imagemagick jq kmod libbison-dev libc6-dev-armhf-cross libcrypto++-dev    \
 	libelf-dev libfdt-dev libfile-fcntllock-perl parallel                     \
 	libfl-dev liblz4-tool libncurses-dev libpython2.7-dev libssl-dev          \
