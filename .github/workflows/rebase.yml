@@ -1,9 +1,12 @@
 name: Automatic Rebase
+#
+# If you comment "/rebase" to the PR this action rebase the PR
+#
+
+
 on:
   issue_comment:
     types: [created]
-permissions:
-  contents: read
 
 jobs:
   rebase:
