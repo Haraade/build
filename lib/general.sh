@@ -1202,13 +1202,14 @@ wait_for_package_manager()
 
 
 
-# Installing debian packages in the armbian build system.
+# Installing debian packages or package files in the armbian build system.
 # The function accepts four optional parameters:
 # autoupdate - If the installation list is not empty then update first.
 # upgrade, clean - the same name for apt
 # verbose - detailed log for the function
 #
 # list="pkg1 pkg2 pkg3 pkgbadname pkg-1.0 | pkg-2.0 pkg5 (>= 9)"
+# or list="pkg1 pkg2 /path-to/output/debs/file-name.deb"
 # install_pkg_deb upgrade verbose $list
 # or
 # install_pkg_deb autoupdate $list
@@ -1223,7 +1224,9 @@ wait_for_package_manager()
 install_pkg_deb ()
 {
 	local list=""
+	local listdeb=""
 	local log_file
+	local add_for_install
 	local for_install
 	local need_autoup=false
 	local need_upgrade=false
@@ -1235,7 +1238,12 @@ install_pkg_deb ()
 	local tmp_file=$(mktemp /tmp/install_log_XXXXX)
 	export DEBIAN_FRONTEND=noninteractive
 
-	list=$(
+	if [ -d $(dirname $LOG_OUTPUT_FILE) ]; then
+		log_file=${LOG_OUTPUT_FILE}
+	else
+		log_file="${SRC}/output/${LOG_SUBPATH}/install.log"
+	fi
+
 	for p in $*;do
 		case $p in
 			autoupdate) need_autoup=true; continue ;;
@@ -1243,21 +1251,32 @@ install_pkg_deb ()
 			clean) need_clean=true; continue ;;
 			verbose) need_verbose=true; continue ;;
 			\||\(*|*\)) continue ;;
+			*[.]deb) listdeb+=" $p"; continue ;;
+			*) list+=" $p" ;;
 		esac
-		echo " $p"
 	done
-	)
-
-	if [ -d $(dirname $LOG_OUTPUT_FILE) ]; then
-		log_file=${LOG_OUTPUT_FILE}
-	else
-		log_file="${SRC}/output/${LOG_SUBPATH}/install.log"
-	fi
 
 	# This is necessary first when there is no apt cache.
 	if $need_upgrade; then
 		apt-get -q update || echo "apt cannot update" >>$tmp_file
 		apt-get -y upgrade || echo "apt cannot upgrade" >>$tmp_file
+	fi
+
+	# Install debian package files
+	if [ -n "$listdeb" ];then
+		for f in $listdeb;do
+			# Calculate dependencies for installing the package file
+			add_for_install=" $(
+				dpkg-deb -f $f Depends | awk '{gsub(/[,]/, "", $0); print $0}'
+			)"
+
+			echo -e "\nfile $f depends on:\n$add_for_install"  >>$log_file
+			install_pkg_deb $add_for_install
+			dpkg -i $f 2>>$log_file
+			dpkg-query -W \
+					   -f '${binary:Package;-27} ${Version;-23}\n' \
+					   $(dpkg-deb -f $f Package) >>$log_file
+		done
 	fi
 
 	# If the package is not installed, check the latest
@@ -1381,7 +1400,7 @@ prepare_host()
 	dialog dirmngr dosfstools dwarves f2fs-tools fakeroot flex gawk           \
 	gcc-arm-linux-gnueabi gcc-aarch64-linux-gnu gdisk gpg busybox             \
 	imagemagick jq kmod libbison-dev libc6-dev-armhf-cross libcrypto++-dev    \
-	libelf-dev libfdt-dev libfile-fcntllock-perl parallel                     \
+	libelf-dev libfdt-dev libfile-fcntllock-perl parallel libmpc-dev          \
 	libfl-dev liblz4-tool libncurses-dev libpython2.7-dev libssl-dev          \
 	libusb-1.0-0-dev linux-base locales lzop ncurses-base ncurses-term        \
 	nfs-kernel-server ntpdate p7zip-full parted patchutils pigz pixz          \
