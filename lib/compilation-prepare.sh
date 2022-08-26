@@ -120,6 +120,10 @@ compilation_prepare()
 	# Linux splash file
 	#
 
+	# disable it.
+	# todo: cleanup logo generation code and bring in plymouth
+	SKIP_BOOTSPLASH=yes
+
 	if linux-version compare "${version}" ge 5.10 && linux-version compare "${version}" lt 5.19 && [ $SKIP_BOOTSPLASH != yes ]; then
 
 		display_alert "Adding" "Kernel splash file" "info"
@@ -368,9 +372,6 @@ compilation_prepare()
 		echo "obj-\$(CONFIG_RTL8192EU) += rtl8192eu/" >> "$kerneldir/drivers/net/wireless/Makefile"
 		sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8192eu\/Kconfig"' \
 		"$kerneldir/drivers/net/wireless/Kconfig"
-
-		# add support for 5.19.2
-		process_patch_file "${SRC}/patch/misc/wireless-rtl8192eu-5.19.2.patch" "applying"
 
 	fi
 
