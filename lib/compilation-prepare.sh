@@ -119,6 +119,7 @@ compilation_prepare()
 	#
 	# Linux splash file
 	#
+	SKIP_BOOTSPLASH=yes
 
 	if linux-version compare "${version}" ge 5.10 && [ $SKIP_BOOTSPLASH != yes ]; then
 
