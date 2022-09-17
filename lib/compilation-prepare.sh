@@ -117,13 +117,13 @@ compilation_prepare()
 	fi
 
 	#
-	# Linux splash file
+	# Linux splash file (legacy)
 	#
 
-	# disable it.
-	# todo: cleanup logo generation code and bring in plymouth
+	# since plymouth introduction, boot scripts are not supporting this method anymore.
+	# In order to enable it, you need to use this: setenv consoleargs "bootsplash.bootfile=bootsplash.armbian ${consoleargs}"
 
-	if linux-version compare "${version}" ge 5.15 && [ $SKIP_BOOTSPLASH != yes ]; then
+	if linux-version compare "${version}" ge 5.15 && [ "${SKIP_BOOTSPLASH}" != yes ]; then
 
 		display_alert "Adding" "Kernel splash file" "info"
 
@@ -555,7 +555,7 @@ compilation_prepare()
 	if linux-version compare "${version}" ge 5.0 && [ "$EXTRAWIFI" == yes ]; then
 
 		# attach to specifics tag or branch
-		local rtl88x2buver="branch:fix-6.0"
+		local rtl88x2buver="commit:00f51d93fe8309b0e23782ad621a038c98c7f031"
 
 		display_alert "Adding" "Wireless drivers for Realtek 88x2bu chipsets ${rtl88x2buver}" "info"
 

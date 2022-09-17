@@ -56,6 +56,7 @@ cleaning()
 			find "${DEB_STORAGE}" -name "${CHOSEN_UBOOT}_*.deb" -delete
 			find "${DEB_STORAGE}" \( -name "${CHOSEN_KERNEL}_*.deb" -o \
 				-name "armbian-*.deb" -o \
+				-name "plymouth-theme-armbian_*.deb" -o \
 				-name "${CHOSEN_KERNEL/image/dtb}_*.deb" -o \
 				-name "${CHOSEN_KERNEL/image/headers}_*.deb" -o \
 				-name "${CHOSEN_KERNEL/image/source}_*.deb" -o \
@@ -1408,7 +1409,7 @@ prepare_host()
 	nfs-kernel-server ntpdate p7zip-full parted patchutils pigz pixz          \
 	pkg-config pv python3-dev python3-distutils qemu-user-static rsync swig   \
 	systemd-container u-boot-tools udev unzip uuid-dev wget whiptail zip      \
-	zlib1g-dev zstd"
+	zlib1g-dev zstd fdisk"
 
   if [[ $(dpkg --print-architecture) == amd64 ]]; then
 
