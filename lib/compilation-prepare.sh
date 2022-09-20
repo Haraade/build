@@ -117,7 +117,7 @@ compilation_prepare()
 	fi
 
 	#
-	# Linux splash file
+	# Linux splash file (legacy)
 	#
 	SKIP_BOOTSPLASH=yes
 
@@ -546,7 +546,7 @@ compilation_prepare()
 	if linux-version compare "${version}" ge 5.0 && [ "$EXTRAWIFI" == yes ]; then
 
 		# attach to specifics tag or branch
-		local rtl88x2buver="branch:fix-6.0"
+		local rtl88x2buver="commit:00f51d93fe8309b0e23782ad621a038c98c7f031"
 
 		display_alert "Adding" "Wireless drivers for Realtek 88x2bu chipsets ${rtl88x2buver}" "info"
 
