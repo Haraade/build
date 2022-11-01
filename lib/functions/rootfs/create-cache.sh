@@ -21,10 +21,8 @@ get_rootfs_cache_list() {
 	local packages_hash=$2
 
 	{
-		# Temportally disable Github API because we don't support to download from it
-		# curl --silent --fail -L "https://api.github.com/repos/armbian/cache/releases?per_page=3" | jq -r '.[].tag_name' \
-		# || curl --silent --fail -L https://cache.armbian.com/rootfs/list
-		curl --silent --fail -L https://cache.armbian.com/rootfs/list
+		curl --silent --fail -L "https://api.github.com/repos/armbian/cache/releases?per_page=3" | jq -r '.[].tag_name' \
+		|| curl --silent --fail -L https://cache.armbian.com/rootfs/list
 
 		find ${SRC}/cache/rootfs/ -mtime -7 -name "${ARCH}-${RELEASE}-${cache_type}-${packages_hash}-*.tar.zst" |
 			sed -e 's#^.*/##' |
@@ -226,9 +224,8 @@ create_rootfs_cache() {
 
 		# stage: check md5 sum of installed packages. Just in case.
 		display_alert "Checking MD5 sum of installed packages" "debsums" "info"
-		eval 'LC_ALL=C LANG=C sudo chroot $SDCARD /bin/bash -e -c "dpkg-query -f ${binary:Package} -W | xargs debsums"' \
-			${PROGRESS_LOG_TO_FILE:+' | tee -a $DEST/${LOG_SUBPATH}/debootstrap.log'} '>/dev/null 2>/dev/null'} ';EVALPIPE=(${PIPESTATUS[@]})'
-		[[ ${EVALPIPE[0]} -ne 0 ]] && exit_with_error "MD5 sums check of installed packages failed"
+		chroot $SDCARD /bin/bash -e -c "debsums -s"
+		[[ $? -ne 0 ]] && exit_with_error "MD5 sums check of installed packages failed"
 
 		# Remove packages from packages.uninstall
 
