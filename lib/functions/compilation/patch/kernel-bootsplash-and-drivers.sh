@@ -1,23 +1,5 @@
-#!/bin/bash
-#
-# Copyright (c) 2013-2021 Igor Pecovnik, igor.pecovnik@gma**.com
-#
-# This file is licensed under the terms of the GNU General Public
-# License version 2. This program is licensed "as is" without any
-# warranty of any kind, whether express or implied.
-#
-# This file is a part of the Armbian build script
-# https://github.com/armbian/build/
-
-# Functions:
-
-# compilation_prepare
-
-
-
-
-compilation_prepare()
-{
+#!/usr/bin/env bash
+compilation_prepare() {
 
 	# Packaging patch for modern kernels should be one for all.
 	# Currently we have it per kernel family since we can't have one
