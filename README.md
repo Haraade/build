@@ -1,3 +1,6 @@
+# DEPRECATED:
+# This branch will not receive any further updates or fixes. Do NOT open bug reports when using it.
+
 <p align="center">
   <a href="#build-framework">
   <img src=".github/armbian-logo.png" alt="Armbian logo" width="144">
@@ -49,7 +52,7 @@
 
 ```bash
 apt-get -y install git
-git clone https://github.com/armbian/build
+git clone --depth=1 --branch=master https://github.com/armbian/build
 cd build
 ./compile.sh
 ```
@@ -85,7 +88,7 @@ BUILD_MINIMAL=yes \
 BUILD_DESKTOP=no \
 KERNEL_ONLY=no \
 KERNEL_CONFIGURE=no \
-CARD_DEVICE="/dev/sda"
+CARD_DEVICE="/dev/sdX"
 ```
 
 More information:
