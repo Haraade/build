@@ -1,6 +1,6 @@
 # Rockchip RK3568 quad core 4GB eMMC USB3 2x 2.5GbE 
 BOARD_NAME="NanoPi R5C"
-BOARDFAMILY="rockchip64" 
+BOARDFAMILY="rk3568-odroid" # Mooching rk3568-odroid family for freshness for now. Uses rockchip64_common for most stuff.
 BOARD_MAINTAINER=""
 BOOT_SOC="rk3568"
 KERNEL_TARGET="edge"
