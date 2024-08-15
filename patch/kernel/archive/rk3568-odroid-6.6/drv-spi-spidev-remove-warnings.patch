@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: John Doe <john.doe@somewhere.on.planet>
-Date: Wed, 14 Aug 2024 16:33:07 +0000
-Subject: rockchip64: edge: 6.10.5 drv:spi:spidev remove warnings
+Date: Wed, 14 Aug 2024 16:52:59 +0000
+Subject: rockchip64: current: drv:spi:spidev remove warnings
 
 Signed-off-by: John Doe <john.doe@somewhere.on.planet>
 ---
@@ -9,13 +9,13 @@ Signed-off-by: John Doe <john.doe@somewhere.on.planet>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/spi/spidev.c b/drivers/spi/spidev.c
-index 5304728c6..64c4280de 100644
+index b97206d47..d32b3f018 100644
 --- a/drivers/spi/spidev.c
 +++ b/drivers/spi/spidev.c
-@@ -698,10 +698,11 @@ static const struct file_operations spidev_fops = {
- static const struct class spidev_class = {
- 	.name = "spidev",
- };
+@@ -702,10 +702,11 @@ static const struct file_operations spidev_fops = {
+  */
+ 
+ static struct class *spidev_class;
  
  static const struct spi_device_id spidev_spi_ids[] = {
 +	{ .name = "spi-dev" },
@@ -24,7 +24,7 @@ index 5304728c6..64c4280de 100644
  	{ .name = "ltc2488" },
  	{ .name = "sx1301" },
  	{ .name = "bk4" },
-@@ -727,10 +728,11 @@ static int spidev_of_check(struct device *dev)
+@@ -731,10 +732,11 @@ static int spidev_of_check(struct device *dev)
  	dev_err(dev, "spidev listed directly in DT is not supported\n");
  	return -EINVAL;
  }
