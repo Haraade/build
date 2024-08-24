@@ -18,20 +18,24 @@ UBOOT_TARGET_MAP="${UBOOT_TARGET_MAP:-BINMAN_ALLOW_MISSING=1;;u-boot-sunxi-with-
 declare -g BOOTSCRIPT='boot-sun50i-next.cmd:boot.cmd'
 declare -g LINUXFAMILY=sunxi64
 
+# shellcheck source=config/sources/families/include/crust_firmware.inc
 source "${BASH_SOURCE%/*}/crust_firmware.inc"
 
 case $BRANCH in
 
 	legacy)
 		declare -g KERNEL_MAJOR_MINOR="6.1" # Major and minor versions of this kernel.
+		declare -g KERNELBRANCH="tag:v6.1.104"
 		;;
 
 	current)
 		declare -g KERNEL_MAJOR_MINOR="6.6" # Major and minor versions of this kernel.
+		declare -g KERNELBRANCH="tag:v6.6.44"
 		;;
 
 	edge)
-		declare -g KERNEL_MAJOR_MINOR="6.7" # Major and minor versions of this kernel.
+		declare -g KERNEL_MAJOR_MINOR="6.10" # Major and minor versions of this kernel.
+		declare -g KERNELBRANCH="tag:v6.10.5"
 		;;
 esac
 
