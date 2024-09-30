@@ -104,6 +104,8 @@ function compile_armbian-bsp-cli() {
 		BOARD_TYPE=$BOARD_TYPE
 		INITRD_ARCH=$INITRD_ARCH
 		KERNEL_IMAGE_TYPE=$KERNEL_IMAGE_TYPE
+		KERNEL_TARGET=$KERNEL_TARGET
+		KERNEL_TEST_TARGET=$KERNEL_TEST_TARGET
 		FORCE_BOOTSCRIPT_UPDATE=$FORCE_BOOTSCRIPT_UPDATE
 		FORCE_UBOOT_UPDATE=$FORCE_UBOOT_UPDATE
 		OVERLAYDIR="$OVERLAYDIR"
@@ -172,10 +174,11 @@ function compile_armbian-bsp-cli() {
 		activate update-initramfs
 	EOF
 
-	# copy distribution support status # @TODO: why? this changes over time and will be out of date
-	local releases=($(find ${SRC}/config/distributions -mindepth 1 -maxdepth 1 -type d))
+	# copy distribution support and upgrade status
+	# this information is used in motd to show status and within armbian-config to perform upgrades
+	local releases=($(find ${SRC}/config/distributions -iname '*order*' -exec echo {} \; -exec cat {} \; | xargs -n2 -d'\n' | sort -nk2 | sed "s/\/order.*//g"))
 	for i in "${releases[@]}"; do
-		echo "$(echo $i | sed 's/.*\///')=$(cat $i/support)" >> "${destination}"/etc/armbian-distribution-status
+		echo "$(echo $i | sed 's/.*\///')=$(cat $i/support)$(echo ";upgrade" | sed 's/.*\///')=$(cat $i/upgrade)" >> "${destination}"/etc/armbian-distribution-status
 	done
 
 	# execute $LINUXFAMILY-specific tweaks
