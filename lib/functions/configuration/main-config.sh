@@ -95,8 +95,6 @@ function do_main_configuration() {
 		TZDATA="Etc/UTC" # If not /etc/timezone at host, default to UTC.
 	fi
 
-	USEALLCORES=yes # Use all CPU cores for compiling
-
 	[[ -z $EXIT_PATCHING_ERROR ]] && EXIT_PATCHING_ERROR="" # exit patching if failed
 	[[ -z $HOST ]] && HOST="$BOARD"
 	cd "${SRC}" || exit
@@ -318,6 +316,9 @@ function do_main_configuration() {
 			display_alert "NETWORKING_STACK=${NETWORKING_STACK}" "Invalid value? Not adding networking extensions" "wrn"
 			;;
 	esac
+
+        # enable APA extension for Debian Unstable release
+        [ "$RELEASE" = "sid" ] && enable_extension "apa"
 
 	## Extensions: at this point we've sourced all the config files that will be used,
 	##             and (hopefully) not yet invoked any extension methods. So this is the perfect
