@@ -354,11 +354,12 @@ driver_rtw88() {
 		display_alert "Adding" "Upstream wireless RTW88 drivers" "info"
 		if [[ -f "${SRC}/patch/misc/rtw88/${version}/001-drivers-net-wireless-realtek-rtw88-upstream-wireless.patch" ]]; then
 			process_patch_file "${SRC}/patch/misc/rtw88/${version}/001-drivers-net-wireless-realtek-rtw88-upstream-wireless.patch" "applying"
-			if linux-version compare "${version}" eq 6.1; then
-				process_patch_file "${SRC}/patch/misc/rtw88/${version}/002-rtw88-sdio-rf-path-detection-fix.patch" "applying" # This patch has been tested only on kernel vendor 6.1.x.
-			fi
 			process_patch_file "${SRC}/patch/misc/rtw88/hack/003-rtw88-decrease-the-log-level-of-tx-report.patch" "applying"
 		fi
+	fi
+	
+	if linux-version compare "${version}" eq 6.1 || linux-version compare "${version}" eq 6.16; then
+		process_patch_file "${SRC}/patch/misc/rtw88/hack/004-rtw88-sdio-rf-path-detection-fix.patch" "applying" # This patch has been tested only on kernel 6.1.x/6.16.x.
 	fi
 }
 
@@ -369,7 +370,7 @@ driver_rtl8852bs() {
 	if linux-version compare "${version}" ge 6.1 && [[ "${LINUXFAMILY}" == spacemit || "${LINUXFAMILY}" == rk35xx || "${LINUXFAMILY}" == rockchip64 ]]; then
 
 		# Attach to specific commit
-		local rtl8852bs_ver='commit:8fa9401084686a645e0a6da359610cc8fce22dc5' # Commit date: July 10, 2024 (please update when updating commit ref)
+		local rtl8852bs_ver='commit:1515f70506fb4d916323addaf5b410d14ed962e9' # Commit date: Sept 8, 2025 (please update when updating commit ref)
 
 		display_alert "Adding" "Wireless drivers for Realtek 8852BS SDIO chipset ${rtl8852bs_ver}" "info"
 
@@ -437,7 +438,7 @@ driver_rtl88x2cs() {
 
 		display_alert "Adding" "Wireless drivers for Realtek 88x2cs chipsets ${rtl88x2csver}" "info"
 
-		fetch_from_repo "$GITHUB_SOURCE/jethome-ru/rtl88x2cs" "rtl88x2cs" "${rtl88x2csver}" "yes" # https://github.com/jethome-ru/rtl88x2cs
+		fetch_from_repo "$GITHUB_SOURCE/jethome-iot/rtl88x2cs" "rtl88x2cs" "${rtl88x2csver}" "yes" # https://github.com/jethome-iot/rtl88x2cs
 		cd "$kerneldir" || exit
 		rm -rf "$kerneldir/drivers/net/wireless/rtl88x2cs"
 		mkdir -p "$kerneldir/drivers/net/wireless/rtl88x2cs/"
