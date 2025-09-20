@@ -52,7 +52,7 @@ esac
 #
 # Available options for BOOT_SCENARIO are:
 # - only-blobs: proprietary rockchip ddrbin, miniloader and ATF
-# - spl-blobs: proprietary rockchip ddrin and ATF, but uses mainline u-boot SPL in place of rockchip miniloader
+# - spl-blobs: proprietary rockchip ddrbin and ATF, but uses mainline u-boot SPL in place of rockchip miniloader
 # - tpl-spl-blob: uses mainline u-boot TPL and SPL with proprietary rockchip ATF blob
 # - tpl-blob-atf-mainline: proprietary rockchip ddrbin + mainline u-boot SPL + mainline ATF
 # - blobless: mainline u-boot TPL + mainline u-boot SPL + mainline ATF
@@ -143,8 +143,10 @@ case "$BOOT_SOC" in
 
 	rk3576)
 		BOOT_SCENARIO="${BOOT_SCENARIO:=spl-blobs}"
-		DDR_BLOB="${DDR_BLOB:-"rk35/rk3576_ddr_lp4_2112MHz_lp5_2736MHz_v1.03.bin"}"
-		BL31_BLOB="${BL31_BLOB:-"rk35/rk3576_bl31_v1.04.elf"}"
+		# FIXME(rk3576): v1.09 caused boot failures on some boards (see PR #8596, #8600).
+		# Pinning to v1.08 until newer DDR binaries are validated across rk3576 boards.
+		DDR_BLOB="${DDR_BLOB:-"rk35/rk3576_ddr_lp4_2112MHz_lp5_2736MHz_v1.08.bin"}"
+		BL31_BLOB="${BL31_BLOB:-"rk35/rk3576_bl31_v1.20.elf"}"
 		;;
 
 	rk3588) #CPUMAX undefined?
