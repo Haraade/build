@@ -228,16 +228,18 @@ function kernel_package_callback_linux_image() {
 		local stubble_sbat="${STUBBLE_SBAT_PATH:-/usr/share/stubble/sbat}"
 
 		# Run finddtbs and validate output
-		stubble_dtbs_raw=$("${stubble_find_dtbs}" "${tmp_kernel_install_dirs[INSTALL_DTBS_PATH]}" "${stubble_hwids}")
+		stubble_dtbs_raw=$("${stubble_find_dtbs}" "${tmp_kernel_install_dirs[INSTALL_DTBS_PATH]}" "${stubble_hwids}" "${STUBBLE_MACHDB_PATH:-}")
 		if [[ $? -ne 0 ]]; then
 			exit_with_error "finddtbs.py failed" "${stubble_find_dtbs}"
 		fi
 		stubble_dtbs=$(echo "${stubble_dtbs_raw}" | sed 's|.*|--devicetree-auto=&|' | tr '\n' ' ')
-		# EXTRA_STUBBLE_DEVICETREES: family-supplied DTBs not yet in stubble hwids (see uefidt.conf).
+		# EXTRA_STUBBLE_DEVICETREES: family-supplied DTBs not yet in stubble hwids (see uefi-arm64-dt.conf).
 		for extra_dtb in "${EXTRA_STUBBLE_DEVICETREES[@]}"; do
 			stubble_dtbs+=" --devicetree-auto=${tmp_kernel_install_dirs[INSTALL_DTBS_PATH]}/${extra_dtb}"
 		done
-		run_host_command_logged /usr/bin/ukify build --linux="${kernel_image_pre_package_path}" --stub="${stubble_efi}" --hwids="${stubble_hwids}" --sbat="@${stubble_sbat}" ${stubble_dtbs} --output="${kernel_pre_package_path}/${kernel_image_name}-${kernel_version_family}.efi"
+		declare stubble_machdb_arg=""
+		[[ -s "${STUBBLE_MACHDB_PATH:-}" ]] && stubble_machdb_arg="--section=.machdb:@${STUBBLE_MACHDB_PATH}"
+		run_host_command_logged /usr/bin/ukify build --linux="${kernel_image_pre_package_path}" --stub="${stubble_efi}" --hwids="${stubble_hwids}" --sbat="@${stubble_sbat}" ${stubble_machdb_arg} ${stubble_dtbs} --output="${kernel_pre_package_path}/${kernel_image_name}-${kernel_version_family}.efi"
 		run_host_command_logged mv "${kernel_pre_package_path}/${kernel_image_name}-${kernel_version_family}.efi" "${kernel_pre_package_path}/${kernel_image_name}-${kernel_version_family}"
 	fi
 	display_alert "Showing contents of Kbuild produced /boot" "linux-image" "debug"
@@ -332,9 +334,25 @@ function kernel_package_callback_linux_image() {
 				# hook exit status, always do the relink, and re-surface the failure at the
 				# very end (see HOOK_FOR_PROPAGATE_HOOK_RC) so apt/dpkg still reports it and
 				# retries -- it self-heals once linux-headers is configured.
+				# In one apt run, dpkg can configure linux-image before linux-headers.
+				# The unpacked headers tree has no compiled scripts yet, so DKMS fails.
+				# Skip the dkms hook then: the headers postinst builds DKMS.
 				cat <<- KERNEL_HOOK_DELEGATION_POSTINST
 					hook_rc=0
-					test -d ${debian_kernel_hook_dir}/${script}.d && { run-parts --arg="${kernel_version_family}" --arg="/${installed_image_path}" ${debian_kernel_hook_dir}/${script}.d || hook_rc=\$?; }
+					skip_hook=""
+					case "\$(dpkg-query -W -f='\${db:Status-Abbrev}' linux-headers-${BRANCH}-${LINUXFAMILY} 2>/dev/null || true)" in
+						?[UF]*) skip_hook="dkms" ;;
+					esac
+					if [ -d ${debian_kernel_hook_dir}/${script}.d ]; then
+						hooks="\$(run-parts --test ${debian_kernel_hook_dir}/${script}.d)" || hook_rc=\$?
+						for hook in \${hooks}; do
+							if [ "\${hook##*/}" = "\${skip_hook}" ]; then
+								echo "Armbian: linux-headers-${BRANCH}-${LINUXFAMILY} not configured yet, its postinst builds DKMS modules. Skipping \${hook}."
+								continue
+							fi
+							"\${hook}" "${kernel_version_family}" "/${installed_image_path}" || hook_rc=\$?
+						done
+					fi
 				KERNEL_HOOK_DELEGATION_POSTINST
 			else
 				cat <<- KERNEL_HOOK_DELEGATION
@@ -663,6 +681,16 @@ function kernel_package_callback_linux_headers() {
 			if [[ -f include/generated/.armbian-build.tar.gz ]]; then
 				tar -C . -xzf include/generated/.armbian-build.tar.gz
 				rm -f include/generated/.armbian-build.tar.gz
+			fi
+
+			# The build host gcc may know -fmin-function-alignment (gcc 14+) while the target gcc does not.
+			# Drop the probe results then, so out-of-tree modules fall back to -falign-functions and no __cold.
+			if [[ -f include/config/auto.conf ]] && grep -q '^CONFIG_CC_HAS_MIN_FUNCTION_ALIGNMENT=y' include/config/auto.conf; then
+				if ! echo 'int x;' | gcc -fmin-function-alignment=4 -x c -c -o /dev/null - 2> /dev/null; then
+					echo "Target gcc lacks -fmin-function-alignment; disabling CONFIG_CC_HAS_MIN_FUNCTION_ALIGNMENT."
+					sed -i -E '/^CONFIG_CC_HAS_(MIN|SANE)_FUNCTION_ALIGNMENT=/d' include/config/auto.conf
+					sed -i -E '/define CONFIG_CC_HAS_(MIN|SANE)_FUNCTION_ALIGNMENT /d' include/generated/autoconf.h
+				fi
 			fi
 		EOT_POSTINST_FINISH
 
