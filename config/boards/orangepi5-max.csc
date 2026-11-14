@@ -4,8 +4,7 @@ BOARD_VENDOR="xunlong"
 BOARDFAMILY="rockchip-rk3588"
 BOARD_MAINTAINER=""
 INTRODUCED="2024"
-BOOTCONFIG="orangepi-5-max-rk3588_defconfig" # vendor name, not standard, see hook below, set BOOT_SOC below to compensate
-BOOT_SOC="rk3588"
+BOOTCONFIG="orangepi-5-max-rk3588_defconfig"
 KERNEL_TARGET="vendor,current,edge"
 KERNEL_TEST_TARGET="vendor,edge"
 FULL_DESKTOP="yes"
@@ -49,6 +48,12 @@ function post_family_tweaks__orangepi5max_naming_audios() {
 	echo 'SUBSYSTEM=="sound", ENV{ID_PATH}=="platform-hdmi1-sound", ENV{SOUND_DESCRIPTION}="HDMI1 Audio"' >> $SDCARD/etc/udev/rules.d/90-naming-audios.rules
 	echo 'SUBSYSTEM=="sound", ENV{ID_PATH}=="platform-es8388-sound", ENV{SOUND_DESCRIPTION}="ES8388 Audio"' >> $SDCARD/etc/udev/rules.d/90-naming-audios.rules
 
+	return 0
+}
+
+function post_family_config__orangepi5max_bluetooth_packages() {
+	[[ "$BRANCH" != vendor* ]] && return 0
+	add_packages_to_image rfkill bluez
 	return 0
 }
 

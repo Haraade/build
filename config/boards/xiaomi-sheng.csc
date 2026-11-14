@@ -1,5 +1,5 @@
 # Qualcomm SM8550 octa core 8/12/16GB tablet
-declare -g BOARD_NAME="Xiaomi Pad 6S Pro"
+declare -g BOARD_NAME="Pad 6S Pro"
 declare -g BOARD_VENDOR="xiaomi"
 declare -g BOARD_MAINTAINER="code002-2"
 declare -g INTRODUCED="2024"
@@ -16,7 +16,6 @@ declare -g BOOTIMG_CMDLINE_EXTRA="udmabuf.size_limit_mb=256 quiet"
 declare -g BOARD_FIRMWARE_INSTALL="-full"
 
 function xiaomi-sheng_is_userspace_supported() {
-	[[ "${RELEASE}" == "jammy" ]] && return 0
 	[[ "${RELEASE}" == "trixie" ]] && return 0
 	[[ "${RELEASE}" == "noble" ]] && return 0
 	[[ "${RELEASE}" == "resolute" ]] && return 0
